@@ -16,9 +16,10 @@ public class SchoolManagementSystem implements Runnable {
 
     @Override
     public void run() {
-        String smsDashboardInput = getSchoolManagementSystemDashboardInput();
         String studentDashboardInput = "";
         do {
+            String smsDashboardInput = getSchoolManagementSystemDashboardInput();
+            studentDashboardInput = "";
             try {
                 if ("login".equals(smsDashboardInput)) {
                     StudentDao studentService = new StudentService();
@@ -26,23 +27,28 @@ public class SchoolManagementSystem implements Runnable {
                     String studentPassword = console.getStringInput("Enter your password:");
                     Boolean isValidLogin = studentService.validateStudent(studentEmail, studentPassword);
                     if (isValidLogin) {
+                    do{
                         studentDashboardInput = getStudentDashboardInput();
                         if ("register".equals(studentDashboardInput)) {
                             Integer courseId = getCourseRegistryInput();
                             studentService.registerStudentToCourse(studentEmail, courseId);
                         }
-                        if ("logout".equals(smsDashboardInput)) {
-                            break;
-                        }
-                        studentDashboardInput = getViewInput();
-                        if("view".equals(studentDashboardInput)){
+//                        studentDashboardInput = getViewInput();
+                        if ("view".equals(studentDashboardInput)) {
                             List<CourseInterface> courses = studentService.getStudentCourses(studentEmail);
-                            System.out.println("Your Courses");
-                            courses.forEach(System.out::println);
+                            if(courses.size()==0){
+                                System.out.println("You are not currently registered for any classes.\n");
+                            }
+                            else{
+                                System.out.println("Your Courses");
+                                courses.forEach(System.out::println);
+                                System.out.println("\n");
+                            }
                         }
-                        if ("logout".equals(smsDashboardInput)) {
-                            break;
-                        }
+                    }while(!studentDashboardInput.equals("logout"));
+                    }
+                    else {
+                        System.out.println("Try Again");
                     }
                 } else {
                     break;
@@ -50,21 +56,14 @@ public class SchoolManagementSystem implements Runnable {
             } catch (NullPointerException e) {
                 System.out.println("nope");
             }
-        } while (true);
-    }
-
-    private String getViewInput() {
-        return console.getStringInput(new StringBuilder()
-        .append("View courses?")
-        .append("\n[View], [logout]")
-        .toString());
+        } while (!studentDashboardInput.equals("Exit"));
     }
 
     private String getSchoolManagementSystemDashboardInput() {
         return console.getStringInput(new StringBuilder()
                 .append("Welcome to the School Management System Dashboard!")
                 .append("\nFrom here, you can select any of the following options:")
-                .append("\n\t[ login ], [ logout ]")
+                .append("\n\t[ login ], [ exit ]")
                 .toString());
     }
 
@@ -72,7 +71,7 @@ public class SchoolManagementSystem implements Runnable {
         return console.getStringInput(new StringBuilder()
                 .append("Welcome to the Student Dashboard!")
                 .append("\nFrom here, you can select any of the following options:")
-                .append("\n\t[ register ], [ logout]")
+                .append("\n\t[ register ], [view], [ logout]")
                 .toString());
     }
 
@@ -85,9 +84,18 @@ public class SchoolManagementSystem implements Runnable {
                 .collect(Collectors.toList());
         return console.getIntegerInput(new StringBuilder()
                 .append("Welcome to the Course Registration Dashboard!")
-                .append("\nFrom here, you can select any of the following options:")
-                .append("\n" + namesOfCourses.toString())
-                .append("\n\t" + listOfCoursesIds.toString())
+                .append("\nFrom here, you can select any of the following options:\n")
+                .append(makeList(listOfCoursesIds,namesOfCourses))
                 .toString());
     }
+    public String makeList(List<Integer> nums, List<String> classes){
+        StringBuilder build = new StringBuilder();
+        for(int x = 0;x<nums.size();x++){
+            build.append(nums.get(x)+" - "+classes.get(x)+"\n");
+        }
+        return build.toString();
+    }
 }
+
+
+
